@@ -19,9 +19,25 @@ class AutoRun:
     def enter(self, boy):
         self.started_at = monotonic()
         boy.frame = 0.0
+        half = self.SIZE / 2
+        boy.x = max(half, min(CANVAS_WIDTH - half, boy.x))
 
     def update(self, boy, dt, now):
         boy.x += boy.face_dir * self.SPEED * dt
+        half = self.SIZE / 2
+        # Fold the traveled distance into the legal interval, including
+        # multiple reflections if a frame takes unusually long.
+        span = CANVAS_WIDTH - 2 * half
+        phase = (boy.x - half) % (2 * span)
+        if phase < span:
+            boy.x = half + phase
+        else:
+            boy.x = half + 2 * span - phase
+            boy.face_dir *= -1
+        if boy.x <= half:
+            boy.face_dir = 1
+        elif boy.x >= CANVAS_WIDTH - half:
+            boy.face_dir = -1
 
 
 class Boy:
