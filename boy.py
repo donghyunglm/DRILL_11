@@ -21,7 +21,7 @@ class AutoRun:
         boy.frame = 0.0
 
     def update(self, boy, dt, now):
-        pass
+        boy.x += boy.face_dir * self.SPEED * dt
 
 
 class Boy:
