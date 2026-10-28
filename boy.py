@@ -95,7 +95,7 @@ class Boy:
     def draw(self):
         frame = int(self.frame)
         if self.state in ('RUN', 'AutoRun'):
-            size = NORMAL_SIZE
+            size = self.auto_run.SIZE if self.state == 'AutoRun' else NORMAL_SIZE
             # Anchor the feet to the same ground line when changing size.
             y = self.y + (size - NORMAL_SIZE) / 2
             self.run_image.clip_composite_draw(
