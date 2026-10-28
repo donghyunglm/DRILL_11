@@ -9,6 +9,19 @@ NORMAL_SIZE = 100
 RUN_SPEED = 200
 ANIMATION_FPS = 10
 
+class AutoRun:
+    """State behavior owned by Boy's transitions state machine."""
+
+    SPEED = RUN_SPEED * 2
+    SIZE = NORMAL_SIZE * 1.5
+    DURATION = 5.0
+
+    def enter(self, boy):
+        self.started_at = monotonic()
+        boy.frame = 0.0
+
+    def update(self, boy, dt, now):
+        pass
 
 
 class Boy:
@@ -21,12 +34,13 @@ class Boy:
         self.last_update = monotonic()
         self.image = load_image(str(Path(__file__).with_name('animation_sheet.png')))
         self.run_image = load_image(str(Path(__file__).with_name('run_animation.png')))
-
+        self.auto_run = AutoRun()
         self.machine = Machine(
             model=self,
             states=[{'name': 'IDLE', 'on_enter': 'enter_idle'},
-                    {'name': 'RUN', 'on_enter': 'enter_run'}],
-            transitions=[['run', 'IDLE', 'RUN'], ['stop', 'RUN', 'IDLE']],
+                    {'name': 'RUN', 'on_enter': 'enter_run'}, {'name': 'AutoRun', 'on_enter': 'enter_auto'}],
+            transitions=[['run', 'IDLE', 'RUN'], ['stop', 'RUN', 'IDLE'],
+                         ['start_auto', 'IDLE', 'AutoRun']],
             initial='IDLE',
             auto_transitions=False,
         )
@@ -37,11 +51,20 @@ class Boy:
     def enter_run(self):
         self.frame = 0.0
 
+    def enter_auto(self):
+        self.auto_run.enter(self)
+
     def handle_event(self, event):
         if event.type not in (SDL_KEYDOWN, SDL_KEYUP):
             return
+        if event.key == SDLK_a:
+            if event.type == SDL_KEYDOWN and self.state == 'IDLE':
+                self.start_auto()
+            return
 
         if event.key not in (SDLK_LEFT, SDLK_RIGHT):
+            return
+        if self.state == 'AutoRun':
             return
 
         if event.type == SDL_KEYDOWN:
@@ -66,10 +89,12 @@ class Boy:
             half = NORMAL_SIZE / 2
             self.x = max(half, min(CANVAS_WIDTH - half,
                                   self.x + self.direction * RUN_SPEED * dt))
+        elif self.state == 'AutoRun':
+            self.auto_run.update(self, dt, now)
 
     def draw(self):
         frame = int(self.frame)
-        if self.state in ('RUN',):
+        if self.state in ('RUN', 'AutoRun'):
             size = NORMAL_SIZE
             # Anchor the feet to the same ground line when changing size.
             y = self.y + (size - NORMAL_SIZE) / 2
