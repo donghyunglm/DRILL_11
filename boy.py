@@ -23,6 +23,9 @@ class AutoRun:
         boy.x = max(half, min(CANVAS_WIDTH - half, boy.x))
 
     def update(self, boy, dt, now):
+        if now - self.started_at >= self.DURATION:
+            boy.finish_auto()
+            return
         boy.x += boy.face_dir * self.SPEED * dt
         half = self.SIZE / 2
         # Fold the traveled distance into the legal interval, including
@@ -56,7 +59,8 @@ class Boy:
             states=[{'name': 'IDLE', 'on_enter': 'enter_idle'},
                     {'name': 'RUN', 'on_enter': 'enter_run'}, {'name': 'AutoRun', 'on_enter': 'enter_auto'}],
             transitions=[['run', 'IDLE', 'RUN'], ['stop', 'RUN', 'IDLE'],
-                         ['start_auto', 'IDLE', 'AutoRun']],
+                         ['start_auto', 'IDLE', 'AutoRun'],
+                         ['finish_auto', 'AutoRun', 'IDLE']],
             initial='IDLE',
             auto_transitions=False,
         )
