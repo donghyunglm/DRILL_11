@@ -60,7 +60,8 @@ class Boy:
                     {'name': 'RUN', 'on_enter': 'enter_run'}, {'name': 'AutoRun', 'on_enter': 'enter_auto'}],
             transitions=[['run', 'IDLE', 'RUN'], ['stop', 'RUN', 'IDLE'],
                          ['start_auto', 'IDLE', 'AutoRun'],
-                         ['finish_auto', 'AutoRun', 'IDLE']],
+                         ['finish_auto', 'AutoRun', 'IDLE'],
+                         ['cancel_auto', 'AutoRun', 'RUN']],
             initial='IDLE',
             auto_transitions=False,
         )
@@ -85,6 +86,11 @@ class Boy:
         if event.key not in (SDLK_LEFT, SDLK_RIGHT):
             return
         if self.state == 'AutoRun':
+            if event.type == SDL_KEYDOWN:
+                self.pressed_keys = {event.key}
+                self.direction = 1 if event.key == SDLK_RIGHT else -1
+                self.face_dir = self.direction
+                self.cancel_auto()
             return
 
         if event.type == SDL_KEYDOWN:
